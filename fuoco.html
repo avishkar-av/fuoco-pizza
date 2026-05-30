@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuoco — Wood-Fired Pizza</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --char:#0d0905; --ember:#c94a1a; --gold:#d4a832;
+  --cream:#f5ede0; --ash:#8a7a6a; --smoke:#1a110a;
+  --card:#1e1510; --border:rgba(138,122,106,0.18);
+  --success:#2ecc71; --danger:#e74c3c;
+}
+html { scroll-behavior:smooth; }
+body { background:var(--char); color:var(--cream); font-family:'Cormorant Garamond',serif; overflow-x:hidden; }
+input,textarea,select { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--cream); padding:0.75rem 1rem; font-family:'Cormorant Garamond',serif; font-size:1rem; width:100%; outline:none; transition:border-color 0.3s; border-radius:2px; }
+input:focus,textarea:focus,select:focus { border-color:var(--ember); }
+select option { background:var(--smoke); }
+button { cursor:pointer; border:none; font-family:'Cormorant Garamond',serif; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--smoke); }
+::-webkit-scrollbar-thumb { background:var(--ember); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+@keyframes flicker { 0%{opacity:.7;transform:translateX(-50%) scaleX(1)} 33%{opacity:1;transform:translateX(-48%) scaleX(1.1)} 66%{opacity:.8;transform:translateX(-52%) scaleX(.95)} 100%{opacity:.9;transform:translateX(-50%) scaleX(1.05)} }
+.fade-up { animation:fadeUp 0.8s cubic-bezier(.22,1,.36,1) both; }
+.d1{animation-delay:.15s} .d2{animation-delay:.3s} .d3{animation-delay:.45s} .d4{animation-delay:.6s}
+
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.2rem 3rem; background:linear-gradient(to bottom,rgba(13,9,5,0.97),transparent); backdrop-filter:blur(4px); }
+.logo { font-family:'Bebas Neue',sans-serif; font-size:1.9rem; letter-spacing:0.15em; color:var(--ember); cursor:pointer; }
+.logo span { color:var(--gold); }
+.nav-links { display:flex; gap:1.5rem; align-items:center; }
+.nav-links button { background:none; color:var(--cream); font-size:0.78rem; letter-spacing:0.2em; text-transform:uppercase; opacity:0.75; font-family:'Cormorant Garamond',serif; transition:opacity 0.3s; }
+.nav-links button:hover { opacity:1; }
+.nav-cart { background:var(--ember) !important; color:var(--cream) !important; opacity:1 !important; padding:0.55rem 1.2rem !important; border-radius:2px; }
+.cart-badge { background:var(--gold); color:var(--char); border-radius:50%; padding:0 5px; margin-left:4px; font-size:0.68rem; font-weight:bold; }
+
+/* PAGES */
+.page { display:none; }
+.page.active { display:block; }
+
+/* HERO */
+#hero { position:relative; height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.hero-bg { position:absolute; inset:0; background-image:url('https://images.forno-bravo.com/wp-content/uploads/2021/04/Neapolitan-Style-Dough-and-Margherita-Pizza-1.jpg'); background-size:cover; background-position:center; filter:brightness(0.22); }
+.hero-flame { position:absolute; bottom:0; left:50%; width:400px; height:500px; transform:translateX(-50%); background:radial-gradient(ellipse at 50% 100%,rgba(201,74,26,0.55) 0%,rgba(212,168,50,0.15) 40%,transparent 70%); filter:blur(50px); animation:flicker 3s ease-in-out infinite alternate; }
+.hero-content { position:relative; text-align:center; z-index:2; padding:0 2rem; }
+.hero-eye { font-size:0.72rem; letter-spacing:0.45em; text-transform:uppercase; color:var(--gold); margin-bottom:1.5rem; }
+.hero-title { font-family:'Playfair Display',serif; font-size:clamp(4.5rem,13vw,11rem); font-weight:900; line-height:0.88; color:var(--cream); }
+.hero-title em { color:var(--ember); }
+.hero-sub { font-size:1.15rem; font-style:italic; color:var(--ash); margin-top:1.8rem; }
+.hero-btns { margin-top:2.8rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+.btn { display:inline-block; padding:0.75rem 2rem; font-size:0.82rem; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; transition:all 0.3s; font-family:'Cormorant Garamond',serif; cursor:pointer; border:none; }
+.btn-primary { background:var(--ember); color:var(--cream); }
+.btn-primary:hover { background:#a83a0e; transform:translateY(-2px); }
+.btn-ghost { background:transparent; color:var(--cream); border:1px solid rgba(245,237,224,0.3); }
+.btn-ghost:hover { border-color:var(--gold); color:var(--gold); transform:translateY(-2px); }
+.btn-danger { background:var(--danger); color:#fff; padding:0.4rem 0.9rem !important; font-size:0.72rem !important; }
+.btn-gold { background:var(--gold); color:var(--char); padding:0.4rem 0.9rem !important; font-size:0.72rem !important; font-weight:bold; }
+.scroll-ind { position:absolute; bottom:2rem; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:0.5rem; color:var(--ash); font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; opacity:0.6; }
+.scroll-line { width:1px; height:48px; background:linear-gradient(to bottom,var(--ash),transparent); }
+
+/* STATS */
+.stats-bar { background:var(--smoke); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:2.5rem 3rem; display:flex; justify-content:center; gap:4rem; flex-wrap:wrap; }
+.stat-num { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; color:var(--ember); line-height:1; }
+.stat-label { font-size:0.7rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--ash); margin-top:0.35rem; }
+
+/* GALLERY */
+.gallery-section { padding:7rem 3rem; max-width:1200px; margin:0 auto; }
+.section-label { font-size:0.72rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--ember); margin-bottom:0.75rem; }
+.section-title { font-family:'Playfair Display',serif; font-size:clamp(2rem,5vw,3.5rem); font-weight:700; color:var(--cream); }
+.section-title em { color:var(--gold); }
+.gallery-grid { display:grid; grid-template-columns:2fr 1fr 1fr; grid-template-rows:300px 300px; gap:4px; margin-top:3rem; }
+.gallery-cell { background-size:cover; background-position:center; border-radius:2px; position:relative; overflow:hidden; }
+.gallery-cell.big { grid-row:1/3; }
+.gallery-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(13,9,5,0.75),transparent); }
+.gallery-label { position:absolute; bottom:1.5rem; left:1.5rem; }
+.gallery-label h4 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--cream); font-weight:700; }
+.gallery-label p { color:var(--gold); font-size:0.8rem; letter-spacing:0.15em; text-transform:uppercase; }
+.gallery-cta { text-align:center; margin-top:3rem; }
+
+/* MENU PAGE */
+#menu-page { padding:8rem 3rem 5rem; max-width:1200px; margin:0 auto; }
+.filter-tabs { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+.filter-btn { padding:0.4rem 1.1rem; font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; font-family:'Cormorant Garamond',serif; border-radius:2px; transition:all 0.2s; background:transparent; color:var(--ash); border:1px solid var(--border); }
+.filter-btn.active { background:var(--ember); color:var(--cream); border-color:var(--ember); }
+.menu-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1px; margin-top:3rem; }
+.menu-card { background:var(--card); border:1px solid var(--border); border-radius:2px; overflow:hidden; transition:transform 0.3s,border-color 0.3s; }
+.menu-card:hover { transform:translateY(-4px); border-color:rgba(201,74,26,0.4); }
+.card-img { height:200px; background-size:cover; background-position:center; position:relative; }
+.card-img-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(30,21,16,0.85) 0%,transparent 60%); }
+.card-badge { position:absolute; top:1rem; right:1rem; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; border:1px solid var(--ember); color:var(--ember); padding:0.2rem 0.55rem; border-radius:2px; }
+.card-price { position:absolute; bottom:1rem; left:1rem; font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:var(--gold); letter-spacing:0.05em; }
+.card-body { padding:1.5rem; }
+.card-name { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--cream); margin-bottom:0.5rem; }
+.card-desc { font-size:0.88rem; font-style:italic; color:var(--ash); line-height:1.65; margin-bottom:1.25rem; }
+.card-add { width:100%; text-align:center; display:block; background:var(--ember); color:var(--cream); padding:0.65rem; font-size:0.8rem; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; transition:background 0.3s; }
+.card-add:hover { background:#a83a0e; }
+
+/* ABOUT PAGE */
+#about-page { padding-top:6rem; }
+.about-hero { height:55vh; background-size:cover; background-position:center; position:relative; }
+.about-hero-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(13,9,5,0.4),rgba(13,9,5,0.85)); }
+.about-hero-text { position:absolute; bottom:3rem; left:3rem; }
+.about-body { max-width:800px; margin:0 auto; padding:5rem 3rem; }
+.about-para { font-size:1.2rem; line-height:1.9; color:var(--ash); margin-bottom:2rem; }
+.about-para span.hl { color:var(--cream); }
+.about-para span.hl-ember { color:var(--ember); }
+.oven-img { height:400px; background-size:cover; background-position:center; border-radius:2px; margin-bottom:5rem; }
+.features-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:3rem; margin-bottom:6rem; }
+.feature-icon { font-size:2rem; margin-bottom:0.75rem; }
+.feature-title { font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--cream); margin-bottom:0.5rem; }
+.feature-desc { font-size:0.92rem; font-style:italic; color:var(--ash); line-height:1.7; }
+.founder-section { border-top:1px solid var(--border); padding-top:4rem; text-align:center; }
+.founder-avatar { width:100px; height:100px; border-radius:50%; background:linear-gradient(135deg,var(--ember),var(--gold)); display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; border:3px solid var(--gold); }
+.founder-avatar span { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--char); letter-spacing:0.05em; }
+.founder-name { font-family:'Playfair Display',serif; font-size:2rem; font-style:italic; color:var(--cream); margin-bottom:0.5rem; }
+.founder-role { font-size:0.75rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:2rem; }
+.founder-quote { font-family:'Playfair Display',serif; font-size:1.35rem; font-style:italic; line-height:1.6; color:var(--cream); max-width:600px; margin:0 auto; position:relative; }
+.founder-quote::before { content:'\201C'; position:absolute; top:-2rem; left:-1rem; font-size:6rem; color:var(--ember); opacity:0.15; font-family:'Playfair Display',serif; line-height:1; }
+.founder-bar { width:60px; height:2px; background:linear-gradient(to right,var(--ember),var(--gold)); margin:2rem auto 0; }
+
+/* RESERVE PAGE */
+#reserve-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:8rem 2rem 4rem; }
+.reserve-box { width:100%; max-width:560px; }
+.reserve-form { display:flex; flex-direction:column; gap:1rem; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.reserve-info { text-align:center; margin-top:2rem; color:var(--ash); font-size:0.82rem; font-style:italic; }
+
+/* CART MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:1rem; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--smoke); border:1px solid var(--border); padding:2rem; width:100%; max-width:520px; max-height:88vh; overflow-y:auto; border-radius:4px; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+.modal-title { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--cream); }
+.modal-close { background:none; color:var(--ash); font-size:1.5rem; line-height:1; }
+.cart-item { display:flex; justify-content:space-between; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border); }
+.cart-item-name { color:var(--cream); font-size:0.95rem; }
+.cart-item-price { color:var(--ash); font-size:0.78rem; }
+.qty-ctrl { display:flex; align-items:center; gap:0.6rem; }
+.qty-btn { width:28px; height:28px; border-radius:2px; color:var(--cream); font-size:1rem; display:flex; align-items:center; justify-content:center; }
+.qty-minus { background:rgba(255,255,255,0.08); }
+.qty-plus { background:var(--ember); }
+.qty-num { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--gold); min-width:18px; text-align:center; }
+.cart-total { display:flex; justify-content:space-between; padding:1rem 0; }
+.cart-total-label { color:var(--ash); text-transform:uppercase; letter-spacing:0.15em; font-size:0.78rem; }
+.cart-total-val { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--gold); }
+.cart-form { display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.25rem; }
+.cart-empty { color:var(--ash); font-style:italic; text-align:center; padding:2rem; }
+
+/* ADMIN */
+#admin-page { min-height:100vh; background:var(--smoke); }
+.admin-login { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+.admin-login-box { background:var(--card); border:1px solid var(--border); padding:3rem; width:100%; max-width:360px; border-radius:4px; text-align:center; }
+.admin-nav { background:var(--char); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:50; }
+.admin-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; max-width:960px; margin:2rem auto; padding:0 2rem; }
+.admin-stat { background:var(--card); border:1px solid var(--border); padding:1.5rem; border-radius:2px; }
+.admin-stat-num { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; line-height:1; }
+.admin-stat-label { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--ash); margin-bottom:0.4rem; }
+.admin-stat-sub { font-size:0.75rem; color:var(--ash); margin-top:0.25rem; font-style:italic; }
+.admin-tabs { display:flex; gap:2px; max-width:960px; margin:0 auto 1rem; padding:0 2rem; }
+.admin-tab { padding:0.55rem 1.4rem; font-size:0.75rem; letter-spacing:0.15em; text-transform:uppercase; font-family:'Cormorant Garamond',serif; background:var(--card); color:var(--cream); border:1px solid var(--border); border-radius:2px; transition:background 0.2s; }
+.admin-tab.active { background:var(--ember); }
+.admin-content { max-width:960px; margin:0 auto; padding:0 2rem 5rem; }
+.admin-row { background:var(--card); border:1px solid var(--border); padding:1.25rem 1.5rem; margin-bottom:1px; border-radius:2px; }
+.order-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; }
+.order-name { font-family:'Playfair Display',serif; color:var(--cream); font-size:1.05rem; }
+.order-phone { color:var(--ash); font-size:0.82rem; margin-left:0.75rem; }
+.order-time { color:var(--ash); font-size:0.75rem; margin-top:0.2rem; }
+.order-right { display:flex; align-items:center; gap:0.75rem; }
+.order-total { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); }
+.status-badge { font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; padding:0.2rem 0.5rem; border-radius:2px; border:1px solid; }
+.order-items { font-size:0.82rem; color:var(--ash); font-style:italic; margin-bottom:0.6rem; }
+.order-notes { font-size:0.78rem; color:var(--ash); margin-bottom:0.6rem; }
+.status-btns { display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.75rem; }
+.status-btn { padding:0.28rem 0.7rem; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; font-family:'Cormorant Garamond',serif; background:transparent; color:var(--ash); border:1px solid var(--border); cursor:pointer; border-radius:2px; transition:all 0.2s; }
+.menu-admin-row { display:flex; gap:1rem; align-items:center; }
+.menu-admin-img { width:60px; height:60px; border-radius:2px; background-size:cover; background-position:center; flex-shrink:0; }
+.menu-admin-info { flex:1; min-width:0; }
+.menu-admin-name { color:var(--cream); font-family:'Playfair Display',serif; font-size:1rem; }
+.menu-admin-desc { color:var(--ash); font-size:0.78rem; font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.avail-btn { padding:0.25rem 0.55rem; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; font-family:'Cormorant Garamond',serif; cursor:pointer; border-radius:2px; flex-shrink:0; }
+.admin-add-btn { background:var(--ember); color:var(--cream); padding:0.55rem 1.4rem; font-size:0.78rem; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; margin-bottom:1rem; float:right; }
+.admin-empty { color:var(--ash); font-style:italic; text-align:center; padding:3rem; }
+.err-msg { color:var(--danger); font-size:0.82rem; margin-bottom:0.5rem; }
+.hint { color:var(--ash); font-size:0.72rem; font-style:italic; margin-top:1rem; }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; right:2rem; z-index:9999; color:#fff; padding:1rem 1.5rem; border-radius:4px; font-size:0.9rem; font-family:'Cormorant Garamond',serif; box-shadow:0 4px 20px rgba(0,0,0,0.5); letter-spacing:0.05em; display:none; }
+.toast.show { display:block; }
+.toast.success { background:var(--success); }
+.toast.error { background:var(--danger); }
+
+/* FOOTER */
+footer { background:var(--smoke); border-top:1px solid var(--border); padding:4rem 3rem 2rem; }
+.footer-grid { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:3rem; margin-bottom:3rem; }
+.footer-logo { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:var(--ember); letter-spacing:0.15em; margin-bottom:0.5rem; }
+.footer-logo span { color:var(--gold); }
+.footer-tagline { color:var(--ash); font-size:0.92rem; font-style:italic; line-height:1.7; max-width:280px; }
+.footer-founder { color:var(--ash); font-size:0.78rem; margin-top:1rem; letter-spacing:0.1em; }
+.footer-founder span { color:var(--gold); }
+.footer-col-title { font-size:0.7rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--ember); margin-bottom:1.2rem; }
+.footer-link { display:block; background:none; color:var(--ash); font-size:0.88rem; letter-spacing:0.1em; font-family:'Cormorant Garamond',serif; margin-bottom:0.6rem; transition:color 0.3s; text-align:left; }
+.footer-link:hover { color:var(--gold); }
+.footer-contact p { color:var(--ash); font-size:0.88rem; font-style:italic; line-height:2; }
+.footer-bottom { border-top:1px solid rgba(138,122,106,0.15); padding-top:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; max-width:1100px; margin:0 auto; }
+.footer-copy { color:rgba(138,122,106,0.4); font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; }
+.footer-by { color:rgba(138,122,106,0.4); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; }
+.footer-by span { color:var(--gold); opacity:0.7; }
+
+/* MODE SWITCHER */
+.mode-switch { position:fixed; bottom:1.5rem; left:1.5rem; z-index:200; display:flex; gap:3px; }
+.mode-btn { padding:0.45rem 0.9rem; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; font-family:'Cormorant Garamond',serif; color:var(--cream); border:1px solid var(--border); cursor:pointer; border-radius:2px; background:rgba(26,17,10,0.92); }
+.mode-btn.active { background:var(--ember); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODE SWITCH -->
+<div class="mode-switch">
+  <button class="mode-btn active" onclick="setMode('customer')">Customer</button>
+  <button class="mode-btn" onclick="setMode('admin')">Admin</button>
+</div>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <div class="logo" onclick="showPage('home')">FU<span>O</span>CO</div>
+  <div class="nav-links">
+    <button onclick="showPage('menu')">Menu</button>
+    <button onclick="showPage('reserve')">Reserve</button>
+    <button onclick="showPage('about')">Our Story</button>
+    <button class="nav-cart" onclick="openCart()">🛒 Cart <span class="cart-badge" id="cart-badge" style="display:none">0</span></button>
+  </div>
+</nav>
+
+<!-- ══ CUSTOMER PAGES ══════════════════════════════════════════════════════════ -->
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-flame"></div>
+    <div class="hero-content">
+      <p class="hero-eye fade-up">Artisan Wood-Fired Pizza · Est. 2019</p>
+      <h1 class="hero-title fade-up d1">Born from<br><em>Fire</em></h1>
+      <p class="hero-sub fade-up d2">Neapolitan tradition. Obsessive craft. Every pizza, a performance.</p>
+      <div class="hero-btns fade-up d3">
+        <button class="btn btn-primary" onclick="showPage('menu')">Order Now</button>
+        <button class="btn btn-ghost" onclick="showPage('reserve')">Reserve Table</button>
+      </div>
+    </div>
+    <div class="scroll-ind"><div class="scroll-line"></div>scroll</div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div style="text-align:center"><div class="stat-num">900°F</div><div class="stat-label">Oven Temperature</div></div>
+    <div style="text-align:center"><div class="stat-num">48 hrs</div><div class="stat-label">Dough Fermentation</div></div>
+    <div style="text-align:center"><div class="stat-num">90 sec</div><div class="stat-label">Perfect Cook Time</div></div>
+    <div style="text-align:center"><div class="stat-num">2019</div><div class="stat-label">Est. in Pune</div></div>
+  </div>
+
+  <!-- GALLERY -->
+  <section class="gallery-section">
+    <div style="text-align:center;margin-bottom:3rem">
+      <p class="section-label">Straight from the Stone</p>
+      <h2 class="section-title">Every pie, a <em>masterpiece</em></h2>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-cell big" style="background-image:url('https://images.forno-bravo.com/wp-content/uploads/2021/04/Neapolitan-Style-Dough-and-Margherita-Pizza-1.jpg')">
+        <div class="gallery-overlay"></div>
+        <div class="gallery-label"><h4>Margherita Vera</h4><p>The Classic</p></div>
+      </div>
+      <div class="gallery-cell" style="background-image:url('https://c8.alamy.com/comp/2AJXJTK/hot-flames-in-pizza-oven-traditional-firewood-stone-wood-fired-pizza-2AJXJTK.jpg')"></div>
+      <div class="gallery-cell" style="background-image:url('https://www.italianrecipebook.com/wp-content/uploads/2022/09/pizza-diavola-1.jpg')">
+        <div class="gallery-overlay"></div>
+        <div class="gallery-label"><h4>Diavola</h4></div>
+      </div>
+      <div class="gallery-cell" style="background-image:url('https://urbanbakes.com/wp-content/uploads/2022/02/IMG_9268.jpg')">
+        <div class="gallery-overlay"></div>
+        <div class="gallery-label"><h4>Bianca Foresta</h4></div>
+      </div>
+      <div class="gallery-cell" style="background-image:url('https://www.proovepizza.co.uk/wp-content/uploads/2019/09/proove-pizza-restaurant-inside-1.jpg')"></div>
+    </div>
+    <div class="gallery-cta"><button class="btn btn-primary" onclick="showPage('menu')">See Full Menu</button></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">FU<span>O</span>CO</div>
+        <p class="footer-tagline">Born from fire. Built on obsession. Fuoco is Pune's most committed wood-fired pizza experience.</p>
+        <p class="footer-founder">Founded by <span>Avishkar & sartha</span></p>
+      </div>
+      <div>
+        <p class="footer-col-title">Navigate</p>
+        <button class="footer-link" onclick="showPage('home')">Home</button>
+        <button class="footer-link" onclick="showPage('menu')">Menu</button>
+        <button class="footer-link" onclick="showPage('about')">Our Story</button>
+        <button class="footer-link" onclick="showPage('reserve')">Reserve</button>
+      </div>
+      <div>
+        <p class="footer-col-title">Find Us</p>
+        <p class="footer-contact">
+          <p>📍 FC Road, Pune, Maharashtra</p>
+          <p>📞 +918623037196</p>
+          <p>✉️ hello@fuoco.in</p>
+          <p>🕐 Daily · 12PM – 11PM</p>
+        </p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 Fuoco Artisan Pizza · All rights reserved</p>
+      <p class="footer-by">Founded by <span>Avishkar & sartha</span> · Crafted with 🔥</p>
+    </div>
+  </footer>
+</div>
+
+<!-- MENU PAGE -->
+<div class="page" id="page-menu">
+  <div id="menu-page">
+    <div style="text-align:center;margin-bottom:1rem">
+      <p class="section-label">The Craft</p>
+      <h2 class="section-title">Fired with <em>Purpose</em></h2>
+      <div class="filter-tabs" id="filter-tabs"></div>
+    </div>
+    <div class="menu-grid" id="menu-grid"></div>
+  </div>
+  <footer>
+    <div class="footer-grid">
+      <div><div class="footer-logo">FU<span>O</span>CO</div><p class="footer-tagline">Born from fire. Built on obsession.</p><p class="footer-founder">Founded by <span>Avishkar & sartha</span></p></div>
+      <div><p class="footer-col-title">Navigate</p><button class="footer-link" onclick="showPage('home')">Home</button><button class="footer-link" onclick="showPage('menu')">Menu</button><button class="footer-link" onclick="showPage('about')">Our Story</button><button class="footer-link" onclick="showPage('reserve')">Reserve</button></div>
+      <div><p class="footer-col-title">Find Us</p><div class="footer-contact"><p>📍 FC Road, Pune</p><p>📞 +91 7329871428</p><p>✉️ hello@fuoco.in</p><p>🕐 Daily · 12PM – 11PM</p></div></div>
+    </div>
+    <div class="footer-bottom"><p class="footer-copy">© 2026 Fuoco Artisan Pizza</p><p class="footer-by">Founded by <span>Avishkar & sartha</span> · 🔥</p></div>
+  </footer>
+</div>
+
+<!-- ABOUT PAGE -->
+<div class="page" id="page-about">
+  <div id="about-page">
+    <div class="about-hero" style="background-image:url('https://www.proovepizza.co.uk/wp-content/uploads/2019/09/proove-pizza-restaurant-inside-1.jpg')">
+      <div class="about-hero-overlay"></div>
+      <div class="about-hero-text">
+        <p class="section-label">Our Philosophy</p>
+        <h2 style="font-family:'Playfair Display',serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:900;color:var(--cream);line-height:1.1">Slow dough.<br><em style="color:var(--gold)">Raging fire.</em></h2>
+      </div>
+    </div>
+    <div class="about-body">
+      <p class="about-para">Every pizza at Fuoco begins 48 hours before you taste it. Our dough cold-ferments for two days, developing the complex flavour that fast food can never replicate. We use <span class="hl">Tipo 00 flour</span> imported from Mulino Caputo in Naples — the same mill that has supplied pizzerias for over a century.</p>
+      <p class="about-para">We cook at <span class="hl-ember">900°F</span> in a hand-built stone oven fuelled by sustainably sourced oak wood. Ninety seconds. That's all it takes — when the heat is honest and the ingredients are real.</p>
+      <div class="oven-img" style="background-image:url('https://c8.alamy.com/comp/2AJXJTK/hot-flames-in-pizza-oven-traditional-firewood-stone-wood-fired-pizza-2AJXJTK.jpg')"></div>
+      <div class="features-grid">
+        <div><div class="feature-icon">🪵</div><div class="feature-title">Oak Wood Only</div><div class="feature-desc">Sustainably sourced oak for clean, even heat that never imparts bitterness.</div></div>
+        <div><div class="feature-icon">🌾</div><div class="feature-title">Tipo 00 Flour</div><div class="feature-desc">Imported from Mulino Caputo, Naples. The same flour used for over a century.</div></div>
+        <div><div class="feature-icon">🇮🇹</div><div class="feature-title">True Neapolitan</div><div class="feature-desc">Our process follows AVPN's original standards. No gas. No shortcuts.</div></div>
+        <div><div class="feature-icon">🥂</div><div class="feature-title">Natural Wine List</div><div class="feature-desc">Biodynamic wines curated to complement the char, not fight it.</div></div>
+        <div><div class="feature-icon">🧂</div><div class="feature-title">Imported Ingredients</div><div class="feature-desc">San Marzano tomatoes, buffalo mozzarella, nduja — sourced fresh.</div></div>
+        <div><div class="feature-icon">♨️</div><div class="feature-title">Stone Oven</div><div class="feature-desc">Hand-built by Neapolitan craftsmen, the heart of everything we do.</div></div>
+      </div>
+      <div class="founder-section">
+        <p class="section-label" style="margin-bottom:1.5rem">The Founder</p>
+        <div class="founder-avatar"><span>AS</span></div>
+        <div class="founder-name">Avishkar & sartha</div>
+        <div class="founder-role">Founder & Head Pizzaiolo</div>
+        <blockquote class="founder-quote">I didn't open a pizza shop. I built an obsession — and invited Pune to taste it.</blockquote>
+        <div class="founder-bar"></div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-grid">
+      <div><div class="footer-logo">FU<span>O</span>CO</div><p class="footer-tagline">Born from fire. Built on obsession.</p><p class="footer-founder">Founded by <span>Avishkar & sartha</span></p></div>
+      <div><p class="footer-col-title">Navigate</p><button class="footer-link" onclick="showPage('home')">Home</button><button class="footer-link" onclick="showPage('menu')">Menu</button><button class="footer-link" onclick="showPage('about')">Our Story</button><button class="footer-link" onclick="showPage('reserve')">Reserve</button></div>
+      <div><p class="footer-col-title">Find Us</p><div class="footer-contact"><p>📍 FC Road, Pune</p><p>📞 +91 98765 43210</p><p>✉️ hello@fuoco.in</p><p>🕐 Daily · 12PM – 11PM</p></div></div>
+    </div>
+    <div class="footer-bottom"><p class="footer-copy">© 2026 Fuoco Artisan Pizza</p><p class="footer-by">Founded by <span>Avishkar & sartha</span> · 🔥</p></div>
+  </footer>
+</div>
+
+<!-- RESERVE PAGE -->
+<div class="page" id="page-reserve">
+  <div id="reserve-page">
+    <div class="reserve-box">
+      <div style="text-align:center;margin-bottom:3rem">
+        <p class="section-label">Book a Table</p>
+        <h2 class="section-title">Your table is <em>waiting</em></h2>
+      </div>
+      <div class="reserve-form">
+        <input type="text" id="res-name" placeholder="Your Name *">
+        <input type="tel" id="res-phone" placeholder="Phone Number *">
+        <div class="form-row">
+          <input type="date" id="res-date">
+          <input type="time" id="res-time">
+        </div>
+        <select id="res-guests">
+          <option value="1">1 Guest</option><option value="2" selected>2 Guests</option>
+          <option value="3">3 Guests</option><option value="4">4 Guests</option>
+          <option value="5">5 Guests</option><option value="6">6 Guests</option>
+          <option value="7">7 Guests</option><option value="8">8 Guests</option>
+        </select>
+        <textarea id="res-notes" placeholder="Special requests?" rows="3"></textarea>
+        <button class="btn btn-primary" onclick="placeReservation()" style="width:100%;padding:1rem">Confirm Reservation</button>
+      </div>
+      <p class="reserve-info">📍 FC Road, Pune · Open Daily 12PM–11PM · +91 98765 43210</p>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-grid">
+      <div><div class="footer-logo">FU<span>O</span>CO</div><p class="footer-tagline">Born from fire. Built on obsession.</p><p class="footer-founder">Founded by <span>Avishkar & sartha</span></p></div>
+      <div><p class="footer-col-title">Navigate</p><button class="footer-link" onclick="showPage('home')">Home</button><button class="footer-link" onclick="showPage('menu')">Menu</button><button class="footer-link" onclick="showPage('about')">Our Story</button><button class="footer-link" onclick="showPage('reserve')">Reserve</button></div>
+      <div><p class="footer-col-title">Find Us</p><div class="footer-contact"><p>📍 FC Road, Pune</p><p>📞 +91 98765 43210</p><p>✉️ hello@fuoco.in</p><p>🕐 Daily · 12PM – 11PM</p></div></div>
+    </div>
+    <div class="footer-bottom"><p class="footer-copy">© 2026 Fuoco Artisan Pizza</p><p class="footer-by">Founded by <span>Avishkar & sartha</span> · 🔥</p></div>
+  </footer>
+</div>
+
+<!-- ══ ADMIN ══════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <!-- Login -->
+  <div class="admin-login" id="admin-login">
+    <div class="admin-login-box">
+      <div class="logo" style="margin-bottom:0.25rem">FU<span>O</span>CO</div>
+      <p style="color:var(--ash);font-size:0.75rem;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:2rem">Admin Panel</p>
+      <input type="password" id="admin-pass" placeholder="Password" style="margin-bottom:0.75rem" onkeydown="if(event.key==='Enter')adminLogin()">
+      <p class="err-msg" id="admin-err" style="display:none">Wrong password</p>
+      <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">Enter</button>
+      <p class="hint">Hint: fuoco2024</p>
+    </div>
+  </div>
+  <!-- Dashboard -->
+  <div id="admin-dash" style="display:none">
+    <div class="admin-nav">
+      <div class="logo">FU<span>O</span>CO <span style="color:var(--ash);font-size:0.85rem;font-family:'Cormorant Garamond',serif;letter-spacing:0.2em">ADMIN</span></div>
+      <button class="btn btn-ghost" onclick="adminLogout()" style="font-size:0.72rem;padding:0.4rem 1rem">Logout</button>
+    </div>
+    <div class="admin-stats" id="admin-stats"></div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="adminTab('orders',this)">Orders</button>
+      <button class="admin-tab" onclick="adminTab('reservations',this)">Reservations</button>
+      <button class="admin-tab" onclick="adminTab('menu',this)">Menu</button>
+    </div>
+    <div class="admin-content" id="admin-content"></div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cart-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Your Order</h3>
+      <button class="modal-close" onclick="closeCart()">×</button>
+    </div>
+    <div id="cart-body"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────────
+const IMGS = {
+  margherita:'https://images.forno-bravo.com/wp-content/uploads/2021/04/Neapolitan-Style-Dough-and-Margherita-Pizza-1.jpg',
+  diavola:'https://www.italianrecipebook.com/wp-content/uploads/2022/09/pizza-diavola-1.jpg',
+  truffle:'https://urbanbakes.com/wp-content/uploads/2022/02/IMG_9268.jpg',
+};
+
+const SEED = [
+  {id:'m1',name:'Margherita Vera',desc:'San Marzano tomato, fior di latte mozzarella, fresh basil, extra virgin olive oil',price:499,tag:'Classic',emoji:'🍕',img:IMGS.margherita,available:true},
+  {id:'m2',name:'Diavola',desc:'Spicy Calabrian salami, smoked mozzarella, chilli oil, wild oregano',price:649,tag:"Chef's Pick",emoji:'🌶️',img:IMGS.diavola,available:true},
+  {id:'m3',name:'Bianca Foresta',desc:'Truffle cream, wild mushrooms, taleggio, rosemary, walnut crumble',price:749,tag:'Signature',emoji:'🫒',img:IMGS.truffle,available:true},
+  {id:'m4',name:'Carbonara',desc:'Guanciale, pecorino romano, slow-cooked egg yolk cream, cracked black pepper',price:699,tag:'Fan Favourite',emoji:'🥓',img:IMGS.margherita,available:true},
+  {id:'m5',name:'Verde',desc:'Pistachio pesto, buffalo ricotta, roasted zucchini, lemon zest, pine nuts',price:599,tag:'Veg',emoji:'🥬',img:IMGS.truffle,available:true},
+  {id:'m6',name:'Il Fuoco',desc:'Ghost pepper oil, nduja sausage, smoked scamorza, wild honey drizzle',price:849,tag:'House Special',emoji:'🔥',img:IMGS.diavola,available:true},
+  {id:'m7',name:'Quattro Formaggi',desc:'Mozzarella, gorgonzola, fontina, pecorino, black truffle honey',price:729,tag:'Cheese Lover',emoji:'🧀',img:IMGS.margherita,available:true},
+  {id:'m8',name:'Prosciutto e Fichi',desc:'Prosciutto crudo, fresh figs, gorgonzola cream, rocket, balsamic glaze',price:799,tag:'Seasonal',emoji:'🍖',img:IMGS.diavola,available:true},
+  {id:'m9',name:'Marinara Antica',desc:'San Marzano tomato, garlic, oregano, capers, no cheese — pure Naples',price:449,tag:'Vegan',emoji:'🍅',img:IMGS.margherita,available:true},
+  {id:'m10',name:'Salmone Affumicato',desc:'Smoked salmon, crème fraîche, capers, dill, red onion, lemon zest',price:879,tag:'Premium',emoji:'🐟',img:IMGS.truffle,available:true},
+  {id:'m11',name:'Burrata Bomber',desc:'Cherry tomatoes, whole fresh burrata, basil oil, sea salt, toasted pine nuts',price:769,tag:'Fresh',emoji:'🌿',img:IMGS.margherita,available:true},
+  {id:'m12',name:'BBQ Pollo',desc:'Smoked chicken, caramelised onions, house BBQ sauce, mozzarella, jalapeños',price:679,tag:'Popular',emoji:'🍗',img:IMGS.diavola,available:true},
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────────
+let menu = JSON.parse(localStorage.getItem('fuoco-menu')) || SEED;
+let orders = JSON.parse(localStorage.getItem('fuoco-orders')) || [];
+let reservations = JSON.parse(localStorage.getItem('fuoco-reservations')) || [];
+let cart = [];
+let activeFilter = 'All';
+let currentAdminTab = 'orders';
+
+function save() {
+  localStorage.setItem('fuoco-menu', JSON.stringify(menu));
+  localStorage.setItem('fuoco-orders', JSON.stringify(orders));
+  localStorage.setItem('fuoco-reservations', JSON.stringify(reservations));
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(()=>t.className='toast', 3000);
+}
+
+// ─── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById('main-nav').style.display = name==='admin' ? 'none' : 'flex';
+  document.querySelector('.mode-switch').style.display = 'flex';
+  window.scrollTo(0,0);
+  if(name==='menu') renderMenu();
+  if(name==='admin') renderAdmin();
+}
+
+function setMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (i===0&&mode==='customer')||(i===1&&mode==='admin'));
+  });
+  if(mode==='admin') showPage('admin');
+  else showPage('home');
+}
+
+// ─── MENU RENDER ───────────────────────────────────────────────────────────────
+function renderMenu() {
+  const available = menu.filter(m=>m.available);
+  const tags = ['All',...new Set(available.map(m=>m.tag))];
+
+  // Filter tabs
+  const ft = document.getElementById('filter-tabs');
+  ft.innerHTML = tags.map(t=>`<button class="filter-btn${t===activeFilter?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('');
+
+  // Cards
+  const filtered = activeFilter==='All' ? available : available.filter(m=>m.tag===activeFilter);
+  document.getElementById('menu-grid').innerHTML = filtered.map(item=>`
+    <div class="menu-card">
+      <div class="card-img" style="background-image:url('${item.img}')">
+        <div class="card-img-overlay"></div>
+        <div class="card-badge">${item.tag}</div>
+        <div class="card-price">₹${item.price}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${item.emoji} ${item.name}</div>
+        <p class="card-desc">${item.desc}</p>
+        <button class="card-add" onclick="addToCart('${item.id}')">Add to Cart</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setFilter(tag) {
+  activeFilter = tag;
+  renderMenu();
+}
+
+// ─── CART ──────────────────────────────────────────────────────────────────────
+function addToCart(id) {
+  const item = menu.find(m=>m.id===id);
+  const ex = cart.find(c=>c.id===id);
+  if(ex) ex.qty++;
+  else cart.push({...item, qty:1});
+  updateCartBadge();
+  toast('Added to cart 🍕');
+}
+
+function updateCartBadge() {
+  const total = cart.reduce((s,i)=>s+i.qty,0);
+  const badge = document.getElementById('cart-badge');
+  badge.textContent = total;
+  badge.style.display = total>0 ? 'inline' : 'none';
+}
+
+function openCart() { renderCart(); document.getElementById('cart-modal').classList.add('open'); }
+function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
+
+function renderCart() {
+  const body = document.getElementById('cart-body');
+  if(cart.length===0){ body.innerHTML=`<p class="cart-empty">Your cart is empty.</p>`; return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  body.innerHTML = `
+    ${cart.map(i=>`
+      <div class="cart-item">
+        <div><div class="cart-item-name">${i.emoji} ${i.name}</div><div class="cart-item-price">₹${i.price} each</div></div>
+        <div class="qty-ctrl">
+          <button class="qty-btn qty-minus" onclick="updateQty('${i.id}',-1)">−</button>
+          <span class="qty-num">${i.qty}</span>
+          <button class="qty-btn qty-plus" onclick="updateQty('${i.id}',1)">+</button>
+        </div>
+      </div>
+    `).join('')}
+    <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-val">₹${total}</span></div>
+    <div class="cart-form">
+      <input type="text" id="order-name" placeholder="Your Name *">
+      <input type="tel" id="order-phone" placeholder="Phone *">
+      <textarea id="order-notes" placeholder="Special instructions" rows="2"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="placeOrder()" style="width:100%;padding:1rem;display:block">🔥 Place Order</button>
+  `;
+}
+
+function updateQty(id, delta) {
+  const item = cart.find(c=>c.id===id);
+  if(!item) return;
+  item.qty = Math.max(0, item.qty+delta);
+  if(item.qty===0) cart = cart.filter(c=>c.id!==id);
+  updateCartBadge();
+  renderCart();
+}
+
+function placeOrder() {
+  const name = document.getElementById('order-name').value.trim();
+  const phone = document.getElementById('order-phone').value.trim();
+  const notes = document.getElementById('order-notes').value.trim();
+  if(!name||!phone){ alert('Please enter your name and phone.'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  orders.push({ name, phone, notes, items:[...cart], total, status:'Pending', createdAt:new Date().toISOString() });
+  save(); cart=[]; updateCartBadge(); closeCart();
+  toast('🔥 Order placed! We\'ll fire it up.','success');
+}
+
+// ─── RESERVATION ───────────────────────────────────────────────────────────────
+function placeReservation() {
+  const name = document.getElementById('res-name').value.trim();
+  const phone = document.getElementById('res-phone').value.trim();
+  const date = document.getElementById('res-date').value;
+  const time = document.getElementById('res-time').value;
+  const guests = document.getElementById('res-guests').value;
+  const notes = document.getElementById('res-notes').value.trim();
+  if(!name||!phone||!date||!time){ alert('Please fill all required fields.'); return; }
+  reservations.push({ name, phone, date, time, guests, notes, status:'Confirmed', createdAt:new Date().toISOString() });
+  save();
+  document.getElementById('res-name').value=''; document.getElementById('res-phone').value='';
+  document.getElementById('res-date').value=''; document.getElementById('res-time').value='';
+  document.getElementById('res-notes').value='';
+  toast('🪑 Table reserved! See you soon.','success');
+  showPage('home');
+}
+
+// ─── ADMIN ─────────────────────────────────────────────────────────────────────
+const ADMIN_PASS = 'fuoco2024';
+let adminLoggedIn = false;
+
+function adminLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  if(pass===ADMIN_PASS) {
+    adminLoggedIn=true;
+    document.getElementById('admin-login').style.display='none';
+    document.getElementById('admin-dash').style.display='block';
+    renderAdmin();
+  } else {
+    const err=document.getElementById('admin-err');
+    err.style.display='block';
+    setTimeout(()=>err.style.display='none',2000);
+  }
+}
+
+function adminLogout() {
+  adminLoggedIn=false;
+  document.getElementById('admin-login').style.display='flex';
+  document.getElementById('admin-dash').style.display='none';
+  document.getElementById('admin-pass').value='';
+  setMode('customer');
+}
+
+function renderAdmin() {
+  if(!adminLoggedIn) return;
+  renderAdminStats();
+  renderAdminTab();
+}
+
+const SC = { Pending:'var(--ember)', Preparing:'var(--gold)', Ready:'var(--success)', Done:'var(--ash)', Confirmed:'var(--success)', Cancelled:'var(--danger)' };
+
+function renderAdminStats() {
+  const pending = orders.filter(o=>o.status==='Pending').length;
+  const today = new Date().toISOString().split('T')[0];
+  const todayRes = reservations.filter(r=>r.date===today).length;
+  const revenue = orders.reduce((s,o)=>s+o.total,0);
+  document.getElementById('admin-stats').innerHTML = [
+    {l:'Total Orders',v:orders.length,sub:`${pending} pending`,c:'var(--ember)'},
+    {l:'Reservations',v:reservations.length,sub:`${todayRes} today`,c:'var(--gold)'},
+    {l:'Menu Items',v:menu.filter(m=>m.available).length,sub:`${menu.length} total`,c:'var(--success)'},
+    {l:'Revenue',v:'₹'+revenue.toLocaleString(),sub:'all time',c:'var(--cream)'},
+  ].map(s=>`
+    <div class="admin-stat">
+      <div class="admin-stat-label">${s.l}</div>
+      <div class="admin-stat-num" style="color:${s.c}">${s.v}</div>
+      <div class="admin-stat-sub">${s.sub}</div>
+    </div>
+  `).join('');
+}
+
+function adminTab(tab, btn) {
+  currentAdminTab=tab;
+  document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdminTab();
+}
+
+function renderAdminTab() {
+  const c = document.getElementById('admin-content');
+  if(currentAdminTab==='orders') renderAdminOrders(c);
+  else if(currentAdminTab==='reservations') renderAdminRes(c);
+  else renderAdminMenu(c);
+}
+
+function renderAdminOrders(c) {
+  if(orders.length===0){ c.innerHTML=`<p class="admin-empty">No orders yet.</p>`; return; }
+  c.innerHTML = [...orders].reverse().map((o,ri)=>{
+    const idx=orders.length-1-ri;
+    const color=SC[o.status]||'var(--ash)';
+    return `
+      <div class="admin-row">
+        <div class="order-header">
+          <div>
+            <span class="order-name">📦 ${o.name}</span><span class="order-phone">${o.phone}</span>
+            <div class="order-time">${new Date(o.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="order-right">
+            <span class="order-total">₹${o.total}</span>
+            <span class="status-badge" style="color:${color};border-color:${color}">${o.status}</span>
+          </div>
+        </div>
+        <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div>
+        ${o.notes?`<div class="order-notes">📝 ${o.notes}</div>`:''}
+        <div class="status-btns">
+          ${['Pending','Preparing','Ready','Done'].map(s=>`
+            <button class="status-btn" onclick="updateOrderStatus(${idx},'${s}')" style="${o.status===s?`background:${SC[s]};color:#fff;border-color:${SC[s]}`:''}">
+              ${s}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAdminRes(c) {
+  if(reservations.length===0){ c.innerHTML=`<p class="admin-empty">No reservations yet.</p>`; return; }
+  c.innerHTML = [...reservations].reverse().map((r,ri)=>{
+    const idx=reservations.length-1-ri;
+    const color=SC[r.status]||'var(--ash)';
+    return `
+      <div class="admin-row">
+        <div class="order-header">
+          <div>
+            <span class="order-name">🪑 ${r.name}</span><span class="order-phone">${r.phone}</span>
+            <div style="color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:0.1em;margin-top:0.3rem">${r.date} @ ${r.time} · ${r.guests} guest${r.guests>1?'s':''}</div>
+            ${r.notes?`<div class="order-time" style="font-style:italic">📝 ${r.notes}</div>`:''}
+          </div>
+          <span class="status-badge" style="color:${color};border-color:${color}">${r.status}</span>
+        </div>
+        <div class="status-btns">
+          ${['Confirmed','Cancelled'].map(s=>`
+            <button class="status-btn" onclick="updateResStatus(${idx},'${s}')" style="${r.status===s?`background:${SC[s]};color:#fff;border-color:${SC[s]}`:''}">
+              ${s}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAdminMenu(c) {
+  c.innerHTML = `
+    <button class="admin-add-btn" onclick="showAddItem()">+ Add Item</button>
+    <div style="clear:both"></div>
+    ${menu.map((item,idx)=>`
+      <div class="admin-row" style="opacity:${item.available?1:0.45}">
+        <div class="menu-admin-row">
+          <div class="menu-admin-img" style="background-image:url('${item.img}')"></div>
+          <div class="menu-admin-info">
+            <div class="menu-admin-name">${item.emoji} ${item.name}</div>
+            <div class="menu-admin-desc">${item.desc}</div>
+          </div>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);flex-shrink:0">₹${item.price}</span>
+          <button class="avail-btn" onclick="toggleAvail(${idx})" style="background:${item.available?'rgba(46,204,113,0.12)':'rgba(231,76,60,0.12)'};color:${item.available?'var(--success)':'var(--danger)'};border:1px solid ${item.available?'var(--success)':'var(--danger)'}">
+            ${item.available?'Live':'Off'}
+          </button>
+          <button class="btn btn-gold" onclick="editItem(${idx})">Edit</button>
+          <button class="btn btn-danger" onclick="deleteItem(${idx})">Del</button>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function updateOrderStatus(idx, status) {
+  orders[idx].status=status; save(); renderAdmin(); toast('Updated','success');
+}
+function updateResStatus(idx, status) {
+  reservations[idx].status=status; save(); renderAdmin(); toast('Updated','success');
+}
+function toggleAvail(idx) {
+  menu[idx].available=!menu[idx].available; save(); renderAdmin();
+}
+function deleteItem(idx) {
+  if(!confirm('Delete this item?')) return;
+  menu.splice(idx,1); save(); renderAdmin(); toast('Deleted','success');
+}
+
+function editItem(idx) {
+  const item=menu[idx];
+  const html=`
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-header"><h3 class="modal-title">Edit Item</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
+        <input id="e-emoji" value="${item.emoji}" placeholder="Emoji">
+        <input id="e-name" value="${item.name}" placeholder="Name">
+        <textarea id="e-desc" rows="2" placeholder="Description">${item.desc}</textarea>
+        <input id="e-price" type="number" value="${item.price}" placeholder="Price">
+        <input id="e-tag" value="${item.tag}" placeholder="Tag">
+        <input id="e-img" value="${item.img}" placeholder="Image URL">
+        <div style="display:flex;gap:1rem;margin-top:0.5rem">
+          <button class="btn btn-primary" onclick="saveEdit(${idx})">Save</button>
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  openModal(html);
+}
+
+function saveEdit(idx) {
+  menu[idx]={
+    ...menu[idx],
+    emoji:document.getElementById('e-emoji').value,
+    name:document.getElementById('e-name').value,
+    desc:document.getElementById('e-desc').value,
+    price:Number(document.getElementById('e-price').value),
+    tag:document.getElementById('e-tag').value,
+    img:document.getElementById('e-img').value||menu[idx].img,
+  };
+  save(); closeModal(); renderAdmin(); toast('Saved','success');
+}
+
+function showAddItem() {
+  const html=`
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-header"><h3 class="modal-title">Add Item</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem">
+        <input id="a-emoji" value="🍕" placeholder="Emoji">
+        <input id="a-name" placeholder="Name *">
+        <textarea id="a-desc" rows="2" placeholder="Description"></textarea>
+        <input id="a-price" type="number" placeholder="Price (₹) *">
+        <input id="a-tag" placeholder="Tag (e.g. Classic)">
+        <input id="a-img" placeholder="Image URL (optional)">
+        <div style="display:flex;gap:1rem;margin-top:0.5rem">
+          <button class="btn btn-primary" onclick="addItem()">Add</button>
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  openModal(html);
+}
+
+function addItem() {
+  const name=document.getElementById('a-name').value.trim();
+  const price=document.getElementById('a-price').value;
+  if(!name||!price){ alert('Name and price required.'); return; }
+  menu.push({
+    id:'m'+Date.now(),
+    emoji:document.getElementById('a-emoji').value||'🍕',
+    name, price:Number(price),
+    desc:document.getElementById('a-desc').value,
+    tag:document.getElementById('a-tag').value||'New',
+    img:document.getElementById('a-img').value||IMGS.margherita,
+    available:true
+  });
+  save(); closeModal(); renderAdmin(); toast('Item added!','success');
+}
+
+// Generic modal
+function openModal(html) {
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay open'; overlay.id='generic-modal';
+  overlay.innerHTML=html;
+  overlay.onclick=e=>{ if(e.target===overlay) closeModal(); };
+  document.body.appendChild(overlay);
+}
+function closeModal() {
+  const m=document.getElementById('generic-modal');
+  if(m) m.remove();
+}
+
+// Set min date for reservation
+document.getElementById('res-date').min = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
